@@ -1,0 +1,27 @@
+{
+  "aws": {
+    "region": "AWS_REGION",
+    "accountId": "AWS_ACCOUNT_ID"
+  },
+  "service": {
+    "name": "SERVICE_NAME",
+    "stage": "STAGE"
+  },
+  "function": {
+    "name": "FUNCTION_NAME"
+  },
+  "apiGateway": {
+    "public": {
+      "url": "PUBLIC_API_GATEWAY_BASE_URL"
+    },
+    "private": {
+      "url": "PRIVATE_API_GATEWAY_BASE_URL"
+    }
+  },
+  "airtable": {
+    "apiKey": "AIRTABLE_API_KEY"
+  },
+  "hubspot": {
+    "apiKey": "HUBSPOT_API_KEY"
+  }
+}

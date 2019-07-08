@@ -1,0 +1,125 @@
+version: 2
+
+references:
+  container_config: &container_config
+    docker:
+      - image: venncity/circleci
+    working_directory: '~/app'
+  deploy_config: &deploy_config
+    <<: *container_config
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+      - run:
+          name: Deploy
+          command: npm run deploy -- --stage $ENV
+
+jobs:
+  build:
+    <<: *container_config
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+      - run:
+          name: Authenticate with NPM
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc && cp .npmrc ~/.npmrc
+      - run:
+          name: Npm Install
+          command: npm run build
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+  lint:
+    <<: *container_config
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+      - run:
+          name: Linting
+          command: npm run lint:ci
+      - store_test_results:
+          path: reports/junit
+      - store_artifacts:
+          path: reports/junit
+  test:
+    environment:
+      ENV: test
+    <<: *container_config
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+      - run:
+          name: Run tests
+          command: npm run test:ci
+      - run:
+          name: Authenticate with NPM
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc && cp .npmrc ~/.npmrc
+      - run:
+          name: Coverage Enforce
+          command: npx @venncity/coverage-police coverage-enforce
+      - store_test_results:
+          path: reports/junit
+      - store_artifacts:
+          path: reports/junit
+  deploy-test:
+    environment:
+      ENV: test
+    <<: *deploy_config
+  deploy-staging:
+    environment:
+      ENV: staging
+    <<: *deploy_config
+  deploy-production:
+    environment:
+      ENV: production
+    <<: *deploy_config
+
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+    - build:
+        context: venn-global
+    - lint:
+        context: venn-global
+        requires:
+        - build
+    - test:
+        context: venn-global
+        requires:
+        - build
+    - deploy-test:
+        context: venn-global
+        requires:
+        - test
+        - lint
+    - deploy-staging:
+        context: venn-global
+        requires:
+        - deploy-test
+        filters:
+          branches:
+            only: master
+    - approve-deploy-production:
+        type: approval
+        requires:
+        - deploy-staging
+    - deploy-production:
+        context: venn-global
+        requires:
+        - approve-deploy-production

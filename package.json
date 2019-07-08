@@ -1,0 +1,55 @@
+{
+  "name": "@venncity/demo-service",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "exportEnv": "npx serverless export-env",
+    "test": "IS_TEST=true jest",
+    "test:watch": "npm run test -- --watchAll",
+    "lint": "npx eslint --fix .",
+    "build": "npm install",
+    "start": "npx serverless offline -s test",
+    "debug": "export SLS_DEBUG=* && node --inspect ./node_modules/.bin/serverless offline --noAuth -s test",
+    "test:ci": "npm run exportEnv -- -s test && jest --ci --reporters=default --reporters=jest-junit --runInBand",
+    "lint:ci": "npx eslint . --format junit -o reports/junit/js-lint-results.xml",
+    "deploy": "npx serverless deploy"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "npm run lint",
+      "git add"
+    ]
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@venncity/eslint-config": "^1.2.0",
+    "@venncity/test-helper": "^1.3.3",
+    "aws-sdk": "^2.449.0",
+    "dotenv": "^8.0.0",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.17.2",
+    "husky": "^2.2.0",
+    "jest": "^24.8.0",
+    "jest-junit": "^6.4.0",
+    "lint-staged": "^8.1.6",
+    "serverless": "^1.41.1",
+    "serverless-export-env": "^1.2.0",
+    "serverless-iam-roles-per-function": "^2.0.0",
+    "serverless-jest-plugin": "^0.2.1",
+    "serverless-offline": "^4.10.6",
+    "serverless-plugin-tracing": "^2.0.0",
+    "serverless-pseudo-parameters": "^2.4.0"
+  },
+  "dependencies": {
+    "@venncity/base-lambda": "^3.0.3",
+    "@venncity/schema-consts": "^1.4.0",
+    "config": "^3.1.0"
+  }
+}

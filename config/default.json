@@ -1,0 +1,9 @@
+{
+  "aws": {
+    "region": "eu-central-1",
+    "accountId": "229795249162"
+  },
+  "messageDedup": {
+    "ttlSeconds": 3600
+  }
+}

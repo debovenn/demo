@@ -1,0 +1,70 @@
+service: demo-service
+
+frameworkVersion: ">=1.36.0" # sls version
+
+# Starts a localhost:7777 api-gateway endpoint for lambda functions of this service
+# > sls offline start
+custom:
+  serverless-offline:
+    port: 7777
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  memorySize: 512 # Mb
+  timeout: 60 # seconds
+  stage: ${opt:stage,'test'} # default, replace with $ sls deploy ... --stage <stage-name>
+  region: ${opt:region,'eu-central-1'} # default, replace with $ sls deploy ... --region <region-name>
+  deploymentBucket: serverless-deployments.venn.city
+  deploymentPrefix: serverless-${self:provider.stage}
+  tracing: true
+  iamRoleStatements:
+    # To enable x-ray
+  - Effect: "Allow"
+    Action:
+    - "xray:PutTraceSegments"
+    - "xray:PutTelemetryRecords"
+    Resource:
+    - "*"
+    # To allow the lambda to work inside a vpc
+  - Effect: "Allow"
+    Action:
+    - "ec2:CreateNetworkInterface"
+    - "ec2:DescribeNetworkInterfaces"
+    - "ec2:DeleteNetworkInterface"
+    Resource:
+    - "*"
+  - Effect: "Allow"
+    Action:
+    - "ssm:GetParameter"
+    Resource:
+    - "*"
+  vpc:
+    securityGroupIds:
+    - ${ssm:/${self:provider.stage}/vpc/HTTP_SECURITY_GROUP}
+    subnetIds: { 'Fn::Split': [ ",", "${ssm:/${self:provider.stage}/vpc/PRIVATE_SUBNETS}" ] }
+  environment:
+    NODE_ENV: ${self:provider.stage}
+    HUBSPOT_API_KEY: ${ssm:/production/hubspot/API_KEY~true} # ~true to decode an encrypted ssm value
+    #AIRTABLE_API_KEY: ${ssm:/${self:provider.stage}/airtable/API_KEY~true} # ~true to decode an encrypted ssm value
+    PUBLIC_API_GATEWAY_BASE_URL: https://api.venn.city/${self:provider.stage}
+    PRIVATE_API_GATEWAY_BASE_URL: ${ssm:/${self:provider.stage}/api-gateway/private/BASE_RESOURCE_URL}
+    SERVICE_NAME: ${self:service}
+    STAGE: ${self:provider.stage}
+
+plugins:
+- serverless-plugin-tracing
+- serverless-offline
+- serverless-export-env
+- serverless-pseudo-parameters
+
+functions:
+  myFunction:
+    handler: src/handler.myFunction
+    description: example function
+    events:
+      - schedule: rate (1 hours)
+      - http:
+          path: demoService/printSomething
+          method: post
+          cors: true

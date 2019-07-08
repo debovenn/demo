@@ -1,0 +1,16 @@
+{
+  "name": "Venn Schema",
+  "schemaPath": "schema.graphql",
+  "extensions": {
+    "endpoints": {
+      "test": {
+        "url": "https://api.venn.city/test/yoga-graphql",
+        "headers": {
+          "user-agent": "JS GraphQL",
+          "Authorization": "public"
+        },
+        "introspect": true
+      }
+    }
+  }
+}
