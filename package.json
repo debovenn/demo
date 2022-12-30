@@ -39,7 +39,7 @@
     "jest": "^24.8.0",
     "jest-junit": "^6.4.0",
     "lint-staged": "^8.1.6",
-    "serverless": "^1.41.1",
+    "serverless": "^1.83.3",
     "serverless-export-env": "^1.2.0",
     "serverless-iam-roles-per-function": "^2.0.0",
     "serverless-jest-plugin": "^0.2.1",
